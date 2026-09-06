@@ -18,6 +18,10 @@ public class GridManager : MonoBehaviour
     public GameObject explosionEffectPrefab;
     public GameObject badgePrefab;
 
+    [Header("Board Tray")]
+    [SerializeField] private GameObject boardBackgroundPrefab;
+    private GameObject activeBoardBackground;
+
     private int width;
     private int height;
     private Vector3[,] cellPositions;
@@ -89,6 +93,9 @@ public class GridManager : MonoBehaviour
         startX = -(width - 1) * cellSize / 2f;
         startY = -(height - 1) * cellSize / 2f;
 
+        // Taban panosunu ýzgara boyutuna göre ayarla
+        UpdateBoardBackground(width, height);
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -110,6 +117,27 @@ public class GridManager : MonoBehaviour
         }
     }
 
+    private void UpdateBoardBackground(int gridW, int gridH)
+    {
+        if (boardBackgroundPrefab == null) return;
+
+        if (activeBoardBackground == null)
+        {
+            activeBoardBackground = Instantiate(boardBackgroundPrefab, transform);
+            activeBoardBackground.name = "Grid_Board_Tray";
+        }
+
+        // Izgaranýn dikey merkezini hesapla
+        activeBoardBackground.transform.position = new Vector3(0f, verticalOffset, 0f);
+
+        // Izgara hücrelerinin dýþýna hafif taþan kenar payý (padding)
+        float padding = 0.35f;
+        float totalWidth = (gridW * cellSize) + padding;
+        float totalHeight = (gridH * cellSize) + padding;
+
+        activeBoardBackground.transform.localScale = new Vector3(totalWidth, totalHeight, 1f);
+    }
+
     private void SpawnPieces(GameObject[] piecePrefabs)
     {
         if (piecePrefabs == null || piecePrefabs.Length == 0) return;
@@ -122,10 +150,10 @@ public class GridManager : MonoBehaviour
         }
 
         int uniqueSlots = pieceCounts.Count;
-        float maxAvailableWidth = 4.2f;
+        float maxAvailableWidth = 3.4f;
         float spacingX = (uniqueSlots > 1) ? Mathf.Min(1.6f, maxAvailableWidth / (uniqueSlots - 1)) : 0f;
         float startX = -(uniqueSlots - 1) * spacingX / 2f;
-        float spawnY = -4.2f;
+        float spawnY = -3.2f;
 
         int index = 0;
         foreach (var pair in pieceCounts)
@@ -183,7 +211,6 @@ public class GridManager : MonoBehaviour
         {
             placedPieces.Add(pieceScript);
 
-            // Hamleyi kaydet
             moveHistory.Push(new PlacementAction
             {
                 piece = pieceScript,
@@ -192,9 +219,7 @@ public class GridManager : MonoBehaviour
             });
         }
 
-        // Puan ekle (+50)
         AddScore(50);
-
         CheckLevelCompletion();
         return true;
     }
@@ -206,23 +231,19 @@ public class GridManager : MonoBehaviour
 
         PlacementAction lastAction = moveHistory.Pop();
 
-        // 1. Tahtadaki hücreleri tekrar boþalt
         foreach (Vector2Int coord in lastAction.occupiedCoords)
         {
             isCellOccupied[coord.x, coord.y] = false;
         }
 
-        // 2. Tahtadaki parçayý yok et
         placedPieces.Remove(lastAction.piece);
         Destroy(lastAction.piece.gameObject);
 
-        // 3. Ýlgili yuvadaki sayýyý bir artýr
         if (lastAction.sourceSlot != null)
         {
             lastAction.sourceSlot.RestorePiece();
         }
 
-        // Puan cezasý (-25)
         AddScore(-25);
     }
 
@@ -257,7 +278,7 @@ public class GridManager : MonoBehaviour
             }
         }
 
-        AddScore(200); // Bölüm tamamlama ödülü
+        AddScore(200);
         StartCoroutine(ExplodeAllPiecesSequence());
     }
 
@@ -265,7 +286,6 @@ public class GridManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
 
-        // 1. Bloklarý patlat ve her birinde pop sesi çal
         foreach (DraggablePiece piece in placedPieces)
         {
             if (piece == null) continue;
@@ -296,18 +316,15 @@ public class GridManager : MonoBehaviour
         placedPieces.Clear();
         moveHistory.Clear();
 
-        // 2. Zafer sesi çal
-        float waitDuration = 1.2f; // Varsayýlan bekleme
+        float waitDuration = 1.2f;
         if (AudioManager.Instance != null && AudioManager.Instance.victorySound != null)
         {
             AudioManager.Instance.PlayVictory();
-            waitDuration = AudioManager.Instance.victorySound.length; // Sesin tam süresi kadar bekle
+            waitDuration = AudioManager.Instance.victorySound.length;
         }
 
-        // Sesin bitmesini bekle
         yield return new WaitForSeconds(waitDuration);
 
-        // 3. Zafer panelini aç
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ToggleNextLevelPanel(true);
