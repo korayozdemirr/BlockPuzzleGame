@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 55434b755babe7d4885375df2f27a3d3, type: 3}
+  m_Name: Level_01
+  m_EditorClassIdentifier: 
+  levelNumber: 1
+  discoveredBy: System
+  gridWidth: 2
+  gridHeight: 2
+  piecesToSpawn:
+  - {fileID: 6282335400361934303, guid: 4edfb22ca2aec544f83f9b51a1181593, type: 3}
+  - {fileID: 3890674886860154640, guid: 5b20c880558e9094b86c2aae452e7e39, type: 3}
