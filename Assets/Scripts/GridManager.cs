@@ -201,6 +201,7 @@ public class GridManager : MonoBehaviour
 
     public void UndoLastMove()
     {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayUndo();
         if (moveHistory.Count == 0) return;
 
         PlacementAction lastAction = moveHistory.Pop();
@@ -264,8 +265,11 @@ public class GridManager : MonoBehaviour
     {
         yield return new WaitForSeconds(0.2f);
 
+        // 1. Bloklarý patlat ve her birinde pop sesi çal
         foreach (DraggablePiece piece in placedPieces)
         {
+            if (piece == null) continue;
+
             foreach (Transform block in piece.transform)
             {
                 SpriteRenderer sr = block.GetComponent<SpriteRenderer>();
@@ -277,17 +281,33 @@ public class GridManager : MonoBehaviour
                     var main = fx.GetComponent<ParticleSystem>().main;
                     main.startColor = blockColor;
                 }
+
+                if (AudioManager.Instance != null)
+                {
+                    AudioManager.Instance.PlayPop();
+                }
+
+                yield return new WaitForSeconds(0.06f);
             }
 
             Destroy(piece.gameObject);
-            yield return new WaitForSeconds(0.08f);
         }
 
         placedPieces.Clear();
         moveHistory.Clear();
 
-        // Otomatik geçiþ yerine tebrik panelini aç
-        yield return new WaitForSeconds(0.3f);
+        // 2. Zafer sesi çal
+        float waitDuration = 1.2f; // Varsayýlan bekleme
+        if (AudioManager.Instance != null && AudioManager.Instance.victorySound != null)
+        {
+            AudioManager.Instance.PlayVictory();
+            waitDuration = AudioManager.Instance.victorySound.length; // Sesin tam süresi kadar bekle
+        }
+
+        // Sesin bitmesini bekle
+        yield return new WaitForSeconds(waitDuration);
+
+        // 3. Zafer panelini aç
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ToggleNextLevelPanel(true);

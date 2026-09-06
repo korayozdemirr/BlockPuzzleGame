@@ -32,7 +32,10 @@ public class DraggablePiece : MonoBehaviour
     void OnMouseDown()
     {
         if (isPlaced) return;
-
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayPick();
+        }
         SetRenderOrder(10); // Sürüklerken en öne al
 
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
@@ -74,14 +77,14 @@ public class DraggablePiece : MonoBehaviour
         }
 
         // Yerleþtirme denemesinde sourceSlot referansýný gönderiyoruz:
- 
-        bool placedSuccessfully = GridManager.Instance.TryPlacePiece(transform, ownerSlot); ;
+
+        bool placedSuccessfully = GridManager.Instance.TryPlacePiece(transform, ownerSlot);
 
         if (placedSuccessfully)
         {
             isPlaced = true;
+            if (AudioManager.Instance != null) AudioManager.Instance.PlaySnap();
             if (pieceCollider != null) pieceCollider.enabled = false;
-
             if (ownerSlot != null)
             {
                 ownerSlot.OnPiecePlacedSuccessfully();
@@ -89,6 +92,7 @@ public class DraggablePiece : MonoBehaviour
         }
         else
         {
+            if (AudioManager.Instance != null) AudioManager.Instance.PlayFail();
             if (ownerSlot != null)
             {
                 ownerSlot.OnPieceResetToSlot();
@@ -104,7 +108,12 @@ public class DraggablePiece : MonoBehaviour
     private void RotatePiece()
     {
         // Parçayý Z ekseninde -90 derece (saat yönünde) çevir
+
         transform.Rotate(0, 0, -90f);
+        if (AudioManager.Instance != null)
+        {
+            AudioManager.Instance.PlayRotate();
+        }
     }
 
     private void SetRenderOrder(int order)
