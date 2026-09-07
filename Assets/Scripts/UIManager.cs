@@ -52,7 +52,8 @@ public class UIManager : MonoBehaviour
         if (undoButton != null)
         {
             undoButton.onClick.AddListener(OnUndoClicked);
-            Sprite undoSprite = Resources.Load<Sprite>("Sprites/btn_undo_icon");
+            Sprite undoSprite = Resources.Load<Sprite>("Sprites/btn_undo_orb");
+            if (undoSprite == null) undoSprite = Resources.Load<Sprite>("Sprites/btn_undo_icon");
             if (undoSprite != null && undoButton.GetComponent<Image>() != null)
             {
                 undoButton.GetComponent<Image>().sprite = undoSprite;
@@ -131,6 +132,7 @@ public class UIManager : MonoBehaviour
         {
             ApplyFont(levelText);
             levelText.text = $"Level {levelNumber}";
+            levelText.color = new Color(0.98f, 0.88f, 0.45f);
         }
     }
 
@@ -141,8 +143,13 @@ public class UIManager : MonoBehaviour
         {
             ApplyFont(scoreText);
             ApplyFont(highScoreText);
-            if (scoreText != null) scoreText.text = $"Score: {score}";
+            if (scoreText != null)
+            {
+                scoreText.text = $"Score: {score}";
+                scoreText.color = new Color(0.98f, 0.88f, 0.45f);
+            }
             highScoreText.text = $"High Score: {highScore}";
+            highScoreText.color = new Color(0.98f, 0.88f, 0.45f);
         }
         else
         {
@@ -150,6 +157,7 @@ public class UIManager : MonoBehaviour
             {
                 ApplyFont(scoreText);
                 scoreText.text = (highScore > 0) ? $"Score: {score} | Best: {highScore}" : $"Score: {score}";
+                scoreText.color = new Color(0.98f, 0.88f, 0.45f);
             }
         }
 
@@ -166,12 +174,14 @@ public class UIManager : MonoBehaviour
         {
             ApplyFont(highScoreText);
             highScoreText.text = $"High Score: {highScore}";
+            highScoreText.color = new Color(0.98f, 0.88f, 0.45f);
         }
         else if (scoreText != null)
         {
             ApplyFont(scoreText);
             int currentScore = GridManager.Instance != null ? GridManager.Instance.currentScore : 0;
             scoreText.text = (highScore > 0) ? $"Score: {currentScore} | Best: {highScore}" : $"Score: {currentScore}";
+            scoreText.color = new Color(0.98f, 0.88f, 0.45f);
         }
     }
 
@@ -404,17 +414,28 @@ public class UIManager : MonoBehaviour
         autoMainMenuBestText.color = new Color(1f, 0.85f, 0.2f);
         autoMainMenuBestText.alignment = TextAlignmentOptions.Center;
 
-        // PLAY Button
-        Sprite playSprite = Resources.Load<Sprite>("Sprites/btn_next_level");
-        GameObject playBtnObj = CreateButton(card.transform, "PLAY", new Vector2(0f, -120f), new Vector2(520f, 120f), new Color(0.2f, 0.75f, 0.35f), playSprite);
+        // PLAY Button (Tam Yuvarlak Circular Play Button)
+        Sprite playSprite = Resources.Load<Sprite>("Sprites/btn_play_circle");
+        if (playSprite == null) playSprite = Resources.Load<Sprite>("Sprites/btn_next_level");
+
+        GameObject playBtnObj = CreateButton(card.transform, "PLAY ▶", new Vector2(0f, -140f), new Vector2(210f, 210f), new Color(0.2f, 0.75f, 0.35f), playSprite);
         Button pBtn = playBtnObj.GetComponent<Button>();
         pBtn.onClick.AddListener(OnPlayClicked);
+
+        Image pImg = playBtnObj.GetComponent<Image>();
+        if (pImg != null && playSprite != null)
+        {
+            pImg.type = Image.Type.Simple;
+            pImg.preserveAspect = true;
+        }
 
         TextMeshProUGUI pTxt = playBtnObj.GetComponentInChildren<TextMeshProUGUI>();
         if (pTxt != null)
         {
             ApplyFont(pTxt);
-            pTxt.fontSize = 46f;
+            pTxt.fontSize = 36f;
+            pTxt.fontStyle = FontStyles.Bold;
+            pTxt.color = Color.white;
         }
 
         autoMainMenuPanel.SetActive(false);
@@ -667,7 +688,8 @@ public class UIManager : MonoBehaviour
         if (customSprite != null)
         {
             img.sprite = customSprite;
-            img.type = Image.Type.Sliced;
+            img.type = (customSprite.border != Vector4.zero) ? Image.Type.Sliced : Image.Type.Simple;
+            img.preserveAspect = true;
             img.color = Color.white;
         }
         else

@@ -8,12 +8,12 @@ public class DraggablePiece : MonoBehaviour
     private bool isPlaced = false;
     private PieceStackSlot ownerSlot;
 
-    // Týklama ve Sürükleme Ayrýmý
+    // Tï¿½klama ve Sï¿½rï¿½kleme Ayrï¿½mï¿½
     private Vector3 clickStartMousePos;
     private float clickStartTime;
     private bool hasTriggeredPick = false;
-    private const float DragThreshold = 0.25f; // Bir miktar hareket edince sürükleme baþlar
-    private const float ClickDurationLimit = 0.3f; // Bu süreden kýsa ve hareketsizse kesin týklamadýr
+    private const float DragThreshold = 0.25f; // Bir miktar hareket edince sï¿½rï¿½kleme baï¿½lar
+    private const float ClickDurationLimit = 0.3f; // Bu sï¿½reden kï¿½sa ve hareketsizse kesin tï¿½klamadï¿½r
 
     private SpriteRenderer[] childRenderers;
     private Collider2D pieceCollider;
@@ -22,7 +22,7 @@ public class DraggablePiece : MonoBehaviour
     {
         pieceCollider = GetComponent<Collider2D>();
         childRenderers = GetComponentsInChildren<SpriteRenderer>();
-        CenterChildrenPivot(); // Pivot kaymasýný otomatik önleyen sihirli metot
+        CenterChildrenPivot(); // Pivot kaymasï¿½nï¿½ otomatik ï¿½nleyen sihirli metot
     }
 
     void Start()
@@ -35,7 +35,7 @@ public class DraggablePiece : MonoBehaviour
         ownerSlot = slot;
     }
 
-    // Parça içindeki kutularýn merkezini (0,0,0) noktasýna toplayan kod
+    // Parï¿½a iï¿½indeki kutularï¿½n merkezini (0,0,0) noktasï¿½na toplayan kod
     private void CenterChildrenPivot()
     {
         if (transform.childCount == 0) return;
@@ -47,7 +47,7 @@ public class DraggablePiece : MonoBehaviour
         }
         centerOffset /= transform.childCount;
 
-        // Kareleri pivot merkezine çek
+        // Kareleri pivot merkezine ï¿½ek
         foreach (Transform child in transform)
         {
             child.localPosition -= centerOffset;
@@ -57,7 +57,7 @@ public class DraggablePiece : MonoBehaviour
     void OnMouseDown()
     {
         if (isPlaced) return;
-        if (Input.GetMouseButtonDown(1)) return; // Sað týk filtresi
+        if (Input.GetMouseButtonDown(1)) return; // Saï¿½ tï¿½k filtresi
 
         Vector3 mouseWorldPos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         mouseWorldPos.z = 0f;
@@ -67,7 +67,7 @@ public class DraggablePiece : MonoBehaviour
         hasTriggeredPick = false;
         isDragging = false;
 
-        // Parmaðýn parçayý kapatmamasý için hafif yukarý offset
+        // Parmaï¿½ï¿½n parï¿½ayï¿½ kapatmamasï¿½ iï¿½in hafif yukarï¿½ offset
         touchOffset = transform.position - mouseWorldPos + new Vector3(0, 0.8f, 0f);
     }
 
@@ -80,20 +80,20 @@ public class DraggablePiece : MonoBehaviour
 
         float distance = Vector3.Distance(clickStartMousePos, mouseWorldPos);
 
-        // Eðer parmak eþikten fazla kaydýysa sürükleme aktifleþir
+        // Eï¿½er parmak eï¿½ikten fazla kaydï¿½ysa sï¿½rï¿½kleme aktifleï¿½ir
         if (!isDragging && distance > DragThreshold)
         {
             isDragging = true;
 
-            // Sürükleme baþladýðý an SADECE BÝR KEZ pick sesi çalar
+            // Sï¿½rï¿½kleme baï¿½ladï¿½ï¿½ï¿½ an SADECE Bï¿½R KEZ pick sesi ï¿½alar
             if (!hasTriggeredPick)
             {
                 if (AudioManager.Instance != null) AudioManager.Instance.PlayPick();
                 hasTriggeredPick = true;
             }
 
-            SetRenderOrder(10); // Sürüklerken öne al
-            transform.localScale = Vector3.one; // Tam boyuta geç
+            SetRenderOrder(10); // Sï¿½rï¿½klerken ï¿½ne al
+            transform.localScale = Vector3.one; // Tam boyuta geï¿½
         }
 
         if (isDragging)
@@ -112,8 +112,8 @@ public class DraggablePiece : MonoBehaviour
         float moveDistance = Vector3.Distance(clickStartMousePos, mouseReleasePos);
         float holdDuration = Time.time - clickStartTime;
 
-        // 1. TIKLAMA / DÖNDÜRME KONTROLÜ
-        // Eðer sürükleme baþlamadýysa veya çok az hareket edip kýsa sürede býraktýysa:
+        // 1. TIKLAMA / Dï¿½NDï¿½RME KONTROLï¿½
+        // Eï¿½er sï¿½rï¿½kleme baï¿½lamadï¿½ysa veya ï¿½ok az hareket edip kï¿½sa sï¿½rede bï¿½raktï¿½ysa:
         if (!isDragging && moveDistance < DragThreshold && holdDuration < ClickDurationLimit)
         {
             RotatePiece();
@@ -121,7 +121,7 @@ public class DraggablePiece : MonoBehaviour
             return;
         }
 
-        // 2. SÜRÜKLEME VE YERLEÞTÝRME KONTROLÜ
+        // 2. Sï¿½Rï¿½KLEME VE YERLEï¿½Tï¿½RME KONTROLï¿½
         if (isDragging)
         {
             isDragging = false;
@@ -169,7 +169,7 @@ public class DraggablePiece : MonoBehaviour
 
     private void RotatePiece()
     {
-        // Parçayý kendi etrafýnda saat yönünde 90 derece çevir
+        // Parï¿½ayï¿½ kendi etrafï¿½nda saat yï¿½nï¿½nde 90 derece ï¿½evir
         transform.Rotate(0, 0, -90f);
 
         if (AudioManager.Instance != null)

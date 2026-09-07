@@ -57,8 +57,8 @@
 ---
 
 ## 🟢 Active State
-- **Status:** All core systems, AI level generation, SaveManager persistence, UI animations, Google LilitaOne font asset, move validation solver, Main Menu, Game Over overlay, and Settings panel are 100% operational.
-- **Scene Objects Required:** Minimal. All managers, overlays, and font assets are self-creating and self-contained via code and lazy initialization.
+- **Status:** Metallic Gem UI Theme & Piece Quantity Counter (`x1`, `x3`, `x2`) feature is 100% operational. Luxury interior background (`bg_luxury_interior`), dark metal board frame (`board_metal_frame`), gold bevelled sockets (`grid_metal_socket`), green/purple/blue gem sprites (`gem_green_g`, `gem_purple_p`, `gem_blue_b`), shiny blue orb Undo button (`btn_undo_orb`), and gold text formatting applied across all systems.
+- **Scene Objects Required:** Self-contained and self-loading from `Assets/Resources/Sprites/`.
 
 ---
 
@@ -99,6 +99,16 @@
 - Generated and saved embedded TMP Font Asset at `Assets/Resources/Fonts/LilitaOne-Regular SDF.asset` with embedded Texture2D atlas sub-asset.
 - Applied `LilitaOne-Regular SDF` font automatically to all TextMeshPro components in `UIManager.cs` and `FloatingScoreText.cs`.
 - Replaced missing raw Unicode glyphs (`▶`, `⚙`) with clean text labels and applied real UI button sprites (`btn_next_level.png`, `btn_undo_icon.png`).
+
+### [2026-09-07] - Metallic Gem Theme & Quantity Badges Integration
+- Generated 8 high-resolution visual assets using AI: `bg_luxury_interior`, `board_metal_frame`, `grid_metal_socket`, `gem_green_g`, `gem_purple_p`, `gem_blue_b`, `btn_undo_orb`, and `badge_count_red`.
+- Integrated automated red count badges (`x1`, `x3`, `x2`) with gold TextMeshPro formatting in `PieceStackSlot.cs`.
+- Updated `GridManager.cs` to auto-load luxury background (`bg_luxury_interior`), metal board frame (`board_metal_frame`), and metal socket cells (`grid_metal_socket`).
+- Applied green, purple, and blue gem sprites (`gem_green_g`, `gem_purple_p`, `gem_blue_b`) dynamically based on piece shape and sub-block count.
+- Updated `UIManager.cs` to display blue orb Undo button (`btn_undo_orb`) and gold text formatting for Level, Score, and High Score displays.
+- **Fixed High-Resolution Sprite Bounds Scaling:** Implemented dynamic scaling math (`targetSize / sprite.bounds.size`) in `GridManager.cs` and `PieceStackSlot.cs` so high-res PNG sprites scale precisely to 1.0 unit cell sockets, 4.5 unit metal board frames, 0.5 unit red count badges, and screen-fit backgrounds regardless of original image resolution.
+- **Perfectly Circular 3D Play Button:** Generated `btn_play_circle` sprite and updated `UIManager.cs` to render a 1:1 ratio 210x210 perfectly round circular Play button with `preserveAspect = true`.
+- **Board & Slot Layout Fine-Tuning:** Refactored `GridManager.cs` to expose `verticalOffset` (0.85f), `slotSpawnY` (-3.1f), and `slotSpacingX` (1.55f) for balanced vertical board centering and bottom slot alignment.
 
 ---
 

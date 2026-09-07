@@ -1374,6 +1374,11 @@ MonoBehaviour:
   undoButton: {fileID: 729490380}
   nextLevelPanel: {fileID: 1714414278}
   nextLevelButton: {fileID: 496772102}
+  gameOverPanel: {fileID: 0}
+  restartButton: {fileID: 0}
+  settingsButton: {fileID: 0}
+  mainMenuPanel: {fileID: 0}
+  playButton: {fileID: 0}
 --- !u!1 &1548307536
 GameObject:
   m_ObjectHideFlags: 0

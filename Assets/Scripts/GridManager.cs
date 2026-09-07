@@ -11,7 +11,9 @@ public class GridManager : MonoBehaviour
 
     [Header("Grid Visuals")]
     public float cellSize = 1.0f;
-    public float verticalOffset = 1.5f;
+    public float verticalOffset = 0.85f;
+    public float slotSpawnY = -3.1f;
+    public float slotSpacingX = 1.55f;
 
     [Header("Prefabs")]
     public GameObject cellPrefab;
@@ -62,6 +64,8 @@ public class GridManager : MonoBehaviour
         moveHistory.Clear();
         activeSlots.Clear();
 
+        EnsureAutoBackground();
+
         if (UIManager.Instance != null)
         {
             UIManager.Instance.UpdateLevelUI(level.levelNumber);
@@ -77,6 +81,33 @@ public class GridManager : MonoBehaviour
         ClearOldBoard();
         BuildGrid();
         SpawnPieces(level.piecesToSpawn);
+    }
+
+    private void EnsureAutoBackground()
+    {
+        GameObject bgObj = GameObject.Find("Auto_Luxury_Background");
+        if (bgObj == null)
+        {
+            bgObj = new GameObject("Auto_Luxury_Background");
+            SpriteRenderer sr = bgObj.AddComponent<SpriteRenderer>();
+            sr.sortingOrder = -10;
+            Sprite bgSprite = Resources.Load<Sprite>("Sprites/bg_luxury_interior");
+            if (bgSprite != null)
+            {
+                sr.sprite = bgSprite;
+                float orthographicSize = Camera.main != null ? Camera.main.orthographicSize : 5f;
+                float cameraHeight = orthographicSize * 2f;
+                float cameraWidth = cameraHeight * (Screen.width > 0 && Screen.height > 0 ? (float)Screen.width / Screen.height : (9f / 16f));
+                float spriteW = bgSprite.bounds.size.x;
+                float spriteH = bgSprite.bounds.size.y;
+                if (spriteW > 0 && spriteH > 0)
+                {
+                    float scale = Mathf.Max(cameraWidth / spriteW, cameraHeight / spriteH) * 1.05f;
+                    bgObj.transform.localScale = new Vector3(scale, scale, 1f);
+                }
+            }
+            bgObj.transform.position = new Vector3(0f, 0f, 10f);
+        }
     }
 
     public void RestartCurrentLevel()
@@ -110,6 +141,8 @@ public class GridManager : MonoBehaviour
         // Taban panosunu ozgara boyutuna gore ayarla
         UpdateBoardBackground(width, height);
 
+        Sprite socketSprite = Resources.Load<Sprite>("Sprites/grid_metal_socket");
+
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
@@ -123,9 +156,35 @@ public class GridManager : MonoBehaviour
                 cellPositions[x, y] = worldPos;
                 isCellOccupied[x, y] = false;
 
-                GameObject newCell = Instantiate(cellPrefab, worldPos, Quaternion.identity);
+                GameObject newCell;
+                if (cellPrefab != null)
+                {
+                    newCell = Instantiate(cellPrefab, worldPos, Quaternion.identity);
+                }
+                else
+                {
+                    newCell = new GameObject($"Cell_{x}_{y}");
+                    newCell.transform.position = worldPos;
+                    newCell.AddComponent<SpriteRenderer>();
+                }
+
                 newCell.name = $"Cell_{x}_{y}";
                 newCell.transform.SetParent(this.transform);
+
+                SpriteRenderer cellSr = newCell.GetComponent<SpriteRenderer>();
+                if (cellSr != null)
+                {
+                    cellSr.sortingOrder = 0;
+                    if (socketSprite != null)
+                    {
+                        cellSr.sprite = socketSprite;
+                        Vector2 sSize = socketSprite.bounds.size;
+                        float sX = (sSize.x > 0) ? cellSize / sSize.x : 1.0f;
+                        float sY = (sSize.y > 0) ? cellSize / sSize.y : 1.0f;
+                        newCell.transform.localScale = new Vector3(sX, sY, 1f);
+                    }
+                }
+
                 activeGridCells.Add(newCell);
             }
         }
@@ -133,21 +192,45 @@ public class GridManager : MonoBehaviour
 
     private void UpdateBoardBackground(int gridW, int gridH)
     {
-        if (boardBackgroundPrefab == null) return;
-
         if (activeBoardBackground == null)
         {
-            activeBoardBackground = Instantiate(boardBackgroundPrefab, transform);
+            if (boardBackgroundPrefab != null)
+            {
+                activeBoardBackground = Instantiate(boardBackgroundPrefab, transform);
+            }
+            else
+            {
+                activeBoardBackground = new GameObject("Grid_Board_Tray");
+                activeBoardBackground.transform.SetParent(transform);
+                activeBoardBackground.AddComponent<SpriteRenderer>();
+            }
             activeBoardBackground.name = "Grid_Board_Tray";
         }
 
         activeBoardBackground.transform.position = new Vector3(0f, verticalOffset, 0f);
 
-        float padding = 0.35f;
+        float padding = 0.5f;
         float totalWidth = (gridW * cellSize) + padding;
         float totalHeight = (gridH * cellSize) + padding;
 
-        activeBoardBackground.transform.localScale = new Vector3(totalWidth, totalHeight, 1f);
+        SpriteRenderer sr = activeBoardBackground.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            sr.sortingOrder = -1;
+            Sprite frameSprite = Resources.Load<Sprite>("Sprites/board_metal_frame");
+            if (frameSprite != null)
+            {
+                sr.sprite = frameSprite;
+                Vector2 fSize = frameSprite.bounds.size;
+                float sX = (fSize.x > 0) ? totalWidth / fSize.x : totalWidth;
+                float sY = (fSize.y > 0) ? totalHeight / fSize.y : totalHeight;
+                activeBoardBackground.transform.localScale = new Vector3(sX, sY, 1f);
+            }
+            else
+            {
+                activeBoardBackground.transform.localScale = new Vector3(totalWidth, totalHeight, 1f);
+            }
+        }
     }
 
     private void SpawnPieces(GameObject[] piecePrefabs)
@@ -162,10 +245,9 @@ public class GridManager : MonoBehaviour
         }
 
         int uniqueSlots = pieceCounts.Count;
-        float maxAvailableWidth = 3.4f;
-        float spacingX = (uniqueSlots > 1) ? Mathf.Min(1.6f, maxAvailableWidth / (uniqueSlots - 1)) : 0f;
+        float spacingX = (uniqueSlots > 1) ? slotSpacingX : 0f;
         float startX = -(uniqueSlots - 1) * spacingX / 2f;
-        float spawnY = -3.2f;
+        float spawnY = slotSpawnY;
 
         int index = 0;
         foreach (var pair in pieceCounts)

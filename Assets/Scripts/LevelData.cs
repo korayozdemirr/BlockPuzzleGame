@@ -5,12 +5,12 @@ public class LevelData : ScriptableObject
 {
     [Header("Level Info")]
     public int levelNumber = 1;
-    public string discoveredBy = "AI"; // Bu bölümü ilk çözen oyuncunun adý
+    public string discoveredBy = "AI"; // Bu bï¿½lï¿½mï¿½ ilk ï¿½ï¿½zen oyuncunun adï¿½
 
     [Header("Grid Dimensions")]
     public int gridWidth = 2;
     public int gridHeight = 2;
 
     [Header("Pieces Given to Player")]
-    public GameObject[] piecesToSpawn; // Bu seviyede oyuncunun önüne gelecek prefab'ler
+    public GameObject[] piecesToSpawn; // Bu seviyede oyuncunun ï¿½nï¿½ne gelecek prefab'ler
 }
