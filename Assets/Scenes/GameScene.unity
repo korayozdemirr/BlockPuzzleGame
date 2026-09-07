@@ -1370,6 +1370,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   levelText: {fileID: 386406422}
   scoreText: {fileID: 359722289}
+  highScoreText: {fileID: 0}
   undoButton: {fileID: 729490380}
   nextLevelPanel: {fileID: 1714414278}
   nextLevelButton: {fileID: 496772102}

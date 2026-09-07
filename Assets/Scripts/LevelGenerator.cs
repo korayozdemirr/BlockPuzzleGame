@@ -19,18 +19,22 @@ public class LevelGenerator : MonoBehaviour
         else Destroy(gameObject);
     }
 
-    public LevelData GenerateNextLevel()
+    public LevelData GenerateNextLevel(int targetLevelNumber = -1)
     {
         LevelData newLevel = ScriptableObject.CreateInstance<LevelData>();
-        newLevel.levelNumber = generatedLevelCounter;
+        
+        int lvlNum = targetLevelNumber > 0 ? targetLevelNumber : generatedLevelCounter;
+        newLevel.levelNumber = lvlNum;
+        generatedLevelCounter = lvlNum + 1;
+
         newLevel.discoveredBy = "Player_" + Random.Range(1000, 9999);
 
-        // Her zaman toplam alaný ÇÝFT SAYI olan tahtalar seçiyoruz (Eksik hücre kalmasýný önler)
+        // Her zaman toplam alani CIFT SAYI olan tahtalar seciyoruz (Eksik hucre kalmasini onler)
         int w = 3;
-        int h = 4; // 12 hücre
+        int h = 4; // 12 hucre
 
-        if (generatedLevelCounter >= 6) { w = 4; h = 4; } // 16 hücre
-        if (generatedLevelCounter >= 10) { w = 4; h = 5; } // 20 hücre
+        if (lvlNum >= 6) { w = 4; h = 4; } // 16 hucre
+        if (lvlNum >= 10) { w = 4; h = 5; } // 20 hucre
 
         newLevel.gridWidth = w;
         newLevel.gridHeight = h;
@@ -38,8 +42,8 @@ public class LevelGenerator : MonoBehaviour
         List<GameObject> pieces = new List<GameObject>();
         bool generationSuccess = false;
 
-        // KUSURSUZ DOÐRULAMA DÖNGÜSÜ:
-        // Tahtada 1 kare bile boþ kalýrsa algoritma anýnda baþtan dener
+        // KUSURSUZ DOGRULAMA DUNUGUSU:
+        // Tahtada 1 kare bile bos kalirsa algoritma aninda bastan dener
         while (!generationSuccess)
         {
             pieces.Clear();
@@ -68,7 +72,7 @@ public class LevelGenerator : MonoBehaviour
                         }
                     }
 
-                    // 2. DENE: L Parçasý (3 Blok)
+                    // 2. DENE: L ParcasÄ± (3 Blok)
                     if (!placed && pieceLPrefab != null && roll < 0.65f)
                     {
                         if (x + 1 < w && y + 1 < h && !virtualBoard[x + 1, y] && !virtualBoard[x, y + 1])
@@ -81,7 +85,7 @@ public class LevelGenerator : MonoBehaviour
                         }
                     }
 
-                    // 3. DENE: 3'lü Düz Çubuk (3 Blok)
+                    // 3. DENE: 3'lu Duz Cubuk (3 Blok)
                     if (!placed && pieceI3Prefab != null && roll < 0.85f)
                     {
                         if (x + 2 < w && !virtualBoard[x + 1, y] && !virtualBoard[x + 2, y])
@@ -94,7 +98,7 @@ public class LevelGenerator : MonoBehaviour
                         }
                     }
 
-                    // 4. DENE: 2'li Çubuk (2 Blok - Kurtarýcý)
+                    // 4. DENE: 2'li Cubuk (2 Blok - KurtarÄ±cÄ±)
                     if (!placed && pieceI2Prefab != null)
                     {
                         if (x + 1 < w && !virtualBoard[x + 1, y])
@@ -115,7 +119,7 @@ public class LevelGenerator : MonoBehaviour
                 }
             }
 
-            // Doðrulama: Tüm hücreler gerçekten doldu mu?
+            // Dogrulama: Tum hucreler gercekten doldu mu?
             bool hasEmptySlot = false;
             for (int y = 0; y < h; y++)
             {
@@ -130,14 +134,14 @@ public class LevelGenerator : MonoBehaviour
                 if (hasEmptySlot) break;
             }
 
-            // Boþluk kalmadýysa baþarýyla tamamlandý, döngüden çýk
+            // Bosluk kalmadÄ±ysa basarÄ±yla tamamlandÄ±, dunguden cÄ±k
             if (!hasEmptySlot)
             {
                 generationSuccess = true;
             }
         }
 
-        // Parça sýrasýný karýþtýr
+        // Parca sÄ±rasÄ±nÄ± karÄ±stÄ±r
         for (int i = 0; i < pieces.Count; i++)
         {
             GameObject temp = pieces[i];
@@ -147,8 +151,6 @@ public class LevelGenerator : MonoBehaviour
         }
 
         newLevel.piecesToSpawn = pieces.ToArray();
-        generatedLevelCounter++;
-
         return newLevel;
     }
 }

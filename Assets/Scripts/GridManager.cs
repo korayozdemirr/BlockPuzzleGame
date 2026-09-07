@@ -35,7 +35,7 @@ public class GridManager : MonoBehaviour
     private List<GameObject> spawnedPieces = new List<GameObject>();
     private Dictionary<GameObject, PieceStackSlot> activeSlots = new Dictionary<GameObject, PieceStackSlot>();
 
-    // Geri Al (Undo) için hamle kaydý
+    // Geri Al (Undo) icin hamle kaydi
     private struct PlacementAction
     {
         public DraggablePiece piece;
@@ -44,7 +44,7 @@ public class GridManager : MonoBehaviour
     }
     private Stack<PlacementAction> moveHistory = new Stack<PlacementAction>();
 
-    // Puan yönetimi
+    // Puan yonetimi
     public int currentScore = 0;
 
     void Awake()
@@ -66,12 +66,26 @@ public class GridManager : MonoBehaviour
         {
             UIManager.Instance.UpdateLevelUI(level.levelNumber);
             UIManager.Instance.UpdateScoreUI(currentScore);
+            if (SaveManager.Instance != null)
+            {
+                UIManager.Instance.UpdateHighScoreUI(SaveManager.Instance.GetHighScore());
+            }
             UIManager.Instance.ToggleNextLevelPanel(false);
+            UIManager.Instance.ToggleGameOverPanel(false);
         }
 
         ClearOldBoard();
         BuildGrid();
         SpawnPieces(level.piecesToSpawn);
+    }
+
+    public void RestartCurrentLevel()
+    {
+        currentScore = 0;
+        if (currentLevel != null)
+        {
+            LoadLevel(currentLevel);
+        }
     }
 
     private void ClearOldBoard()
@@ -93,7 +107,7 @@ public class GridManager : MonoBehaviour
         startX = -(width - 1) * cellSize / 2f;
         startY = -(height - 1) * cellSize / 2f;
 
-        // Taban panosunu ýzgara boyutuna göre ayarla
+        // Taban panosunu ozgara boyutuna gore ayarla
         UpdateBoardBackground(width, height);
 
         for (int x = 0; x < width; x++)
@@ -127,10 +141,8 @@ public class GridManager : MonoBehaviour
             activeBoardBackground.name = "Grid_Board_Tray";
         }
 
-        // Izgaranýn dikey merkezini hesapla
         activeBoardBackground.transform.position = new Vector3(0f, verticalOffset, 0f);
 
-        // Izgara hücrelerinin dýþýna hafif taþan kenar payý (padding)
         float padding = 0.35f;
         float totalWidth = (gridW * cellSize) + padding;
         float totalHeight = (gridH * cellSize) + padding;
@@ -220,7 +232,15 @@ public class GridManager : MonoBehaviour
         }
 
         AddScore(50);
-        CheckLevelCompletion();
+        FloatingScoreText.Spawn(pieceTransform.position, "+50", new Color(1f, 0.88f, 0.2f), 4.5f);
+
+        bool isCompleted = CheckLevelCompletion();
+
+        if (!isCompleted && !CanAnyPieceBePlaced())
+        {
+            TriggerGameOver();
+        }
+
         return true;
     }
 
@@ -245,6 +265,12 @@ public class GridManager : MonoBehaviour
         }
 
         AddScore(-25);
+
+        // Geri alindiginda Game Over panelini kapat ve oyuncunun devam etmesine izin ver
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ToggleGameOverPanel(false);
+        }
     }
 
     private void AddScore(int amount)
@@ -253,6 +279,15 @@ public class GridManager : MonoBehaviour
         if (UIManager.Instance != null)
         {
             UIManager.Instance.UpdateScoreUI(currentScore);
+        }
+
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.TryUpdateHighScore(currentScore);
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.UpdateHighScoreUI(SaveManager.Instance.GetHighScore());
+            }
         }
     }
 
@@ -268,18 +303,117 @@ public class GridManager : MonoBehaviour
         return coord.x >= 0 && coord.x < width && coord.y >= 0 && coord.y < height;
     }
 
-    private void CheckLevelCompletion()
+    private bool CheckLevelCompletion()
     {
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
-                if (!isCellOccupied[x, y]) return;
+                if (!isCellOccupied[x, y]) return false;
             }
         }
 
         AddScore(200);
+        FloatingScoreText.Spawn(new Vector3(0f, verticalOffset, 0f), "+200 EXCELLENT!", new Color(0.2f, 1f, 0.4f), 5.5f);
         StartCoroutine(ExplodeAllPiecesSequence());
+        return true;
+    }
+
+    public bool CanAnyPieceBePlaced()
+    {
+        List<GameObject> availablePrefabs = new List<GameObject>();
+        foreach (var pair in activeSlots)
+        {
+            if (pair.Value != null && pair.Value.count > 0)
+            {
+                availablePrefabs.Add(pair.Key);
+            }
+        }
+
+        if (availablePrefabs.Count == 0) return true;
+
+        foreach (GameObject prefab in availablePrefabs)
+        {
+            List<Vector2Int> baseOffsets = GetPrefabSubBlockOffsets(prefab);
+            if (baseOffsets.Count == 0) continue;
+
+            for (int rot = 0; rot < 4; rot++)
+            {
+                List<Vector2Int> rotatedOffsets = RotateOffsets(baseOffsets, rot);
+
+                for (int gx = 0; gx < width; gx++)
+                {
+                    for (int gy = 0; gy < height; gy++)
+                    {
+                        if (CanFitAt(gx, gy, rotatedOffsets))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private List<Vector2Int> GetPrefabSubBlockOffsets(GameObject prefab)
+    {
+        List<Vector2Int> offsets = new List<Vector2Int>();
+        if (prefab == null || prefab.transform.childCount == 0) return offsets;
+
+        Vector3 firstChildPos = prefab.transform.GetChild(0).localPosition;
+        for (int i = 0; i < prefab.transform.childCount; i++)
+        {
+            Vector3 pos = prefab.transform.GetChild(i).localPosition - firstChildPos;
+            int rx = Mathf.RoundToInt(pos.x / cellSize);
+            int ry = Mathf.RoundToInt(pos.y / cellSize);
+            offsets.Add(new Vector2Int(rx, ry));
+        }
+        return offsets;
+    }
+
+    private List<Vector2Int> RotateOffsets(List<Vector2Int> original, int rotationSteps)
+    {
+        List<Vector2Int> rotated = new List<Vector2Int>();
+        foreach (var coord in original)
+        {
+            int x = coord.x;
+            int y = coord.y;
+            for (int step = 0; step < rotationSteps; step++)
+            {
+                int temp = x;
+                x = y;
+                y = -temp;
+            }
+            rotated.Add(new Vector2Int(x, y));
+        }
+        return rotated;
+    }
+
+    private bool CanFitAt(int startX, int startY, List<Vector2Int> offsets)
+    {
+        foreach (var offset in offsets)
+        {
+            int targetX = startX + offset.x;
+            int targetY = startY + offset.y;
+
+            if (!IsValidCoord(new Vector2Int(targetX, targetY)) || isCellOccupied[targetX, targetY])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void TriggerGameOver()
+    {
+        if (AudioManager.Instance != null) AudioManager.Instance.PlayFail();
+        FloatingScoreText.Spawn(new Vector3(0f, verticalOffset, 0f), "NO MORE MOVES!", new Color(1f, 0.2f, 0.2f), 5.5f);
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ToggleGameOverPanel(true);
+        }
     }
 
     private IEnumerator ExplodeAllPiecesSequence()
